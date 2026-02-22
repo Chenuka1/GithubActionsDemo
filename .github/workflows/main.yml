@@ -1,42 +1,39 @@
-name: Appium Tests
+name: Android Appium Tests
 
-on: [push] # Trigger on push events
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  test:
+  android-tests:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout project
+        uses: actions/checkout@v4
 
-    - name: Set up JDK
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin'
-        java-version: '17'
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
 
-    - name: Install Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20'
+      - name: Install dependencies
+        run: npm install
 
-    - name: Prepare Appium
-      run: |
-        npm install -g appium
-        appium driver install uiautomator2
-        # Start Appium server in the background and log output
-        appium "--allow-insecure=*:session_discovery" > appium.log &
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
 
-    - name: Run tests
-      # Uses the Android Emulator Runner action
-      uses: reactivecircus/android-emulator-runner@v2
-      with:
-        api-level: 29
-        profile: Nexus 6
-        script: |
-          # Install your test app
-          cp ./app/ApiDemos-debug.apk ./app.apk
-          adb install -r ./app.apk
-          # Run your test commands (e.g., using Gradle or a script)
-          ./gradlew test --tests "AdvancedApiDemosTest"
+      - name: Run Appium Tests
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          arch: x86_64
+          profile: pixel_4
+          script: |
+            adb install ./your-app.apk
+            npm test
